@@ -1,18 +1,20 @@
 sub init()
     m.top.backgroundURI = "pkg:/images/background-controls.jpg"
 
-    m.save_feed_url = m.top.FindNode("save_feed_url")  'Save url to registry
+    m.save_feed_url = m.top.FindNode("save_feed_url")  
 
-    m.get_channel_list = m.top.FindNode("get_channel_list") 'get url from registry and parse the feed
-    m.get_channel_list.ObserveField("content", "SetContent") 'Is thre content parsed? If so, goto SetContent sub and dsipay list
-
+    m.get_channel_list = m.top.FindNode("get_channel_list") 
+    m.get_channel_list.ObserveField("content", "SetContent") 
     m.list = m.top.FindNode("list")
     m.list.ObserveField("itemSelected", "setChannel") 
 
     m.video = m.top.FindNode("Video")
     m.video.ObserveField("state", "checkState")
 
-    showdialog()  'Force a keyboard dialog.  
+
+    m.global.feedurl = ""
+    m.save_feed_url.control = "RUN"
+    m.get_channel_list.control = "RUN"
 End sub
 
 ' **************************************************************
@@ -77,7 +79,6 @@ sub setChannel()
 		content = m.list.content.getChild(m.list.currFocusSection).getChild(itemSelected)
 	end if
 
-	'Probably would be good to make content = content.clone(true) but for now it works like this
 	content.streamFormat = "hls, mp4, mkv, mp3, avi, m4v, ts, mpeg-4, flv, vob, ogg, ogv, webm, mov, wmv, asf, amv, mpg, mp2, mpeg, mpe, mpv, mpeg2"
 
 	if m.video.content <> invalid and m.video.content.url = content.url return
@@ -97,39 +98,3 @@ sub setChannel()
 end sub
 
 
-sub showdialog()
-    PRINT ">>>  ENTERING KEYBOARD <<<"
-
-
-    keyboarddialog = createObject("roSGNode", "KeyboardDialog")
-    keyboarddialog.backgroundUri = "pkg:/images/rsgde_bg_hd.jpg"
-    keyboarddialog.title = "ENTER PLAYLIST HERE"
-
-    keyboarddialog.buttons=["OK","Set back to Demo", "Save"]
-    keyboarddialog.optionsDialog=true
-
-    m.top.dialog = keyboarddialog
-    m.top.dialog.text = m.global.feedurl
-    m.top.dialog.keyboard.textEditBox.cursorPosition = len(m.global.feedurl)
-    m.top.dialog.keyboard.textEditBox.maxTextLength = 300
-
-    KeyboardDialog.observeFieldScoped("buttonSelected","onKeyPress")  'we observe button ok/cancel, if so goto to onKeyPress sub
-end sub
-
-
-sub onKeyPress()
-    if m.top.dialog.buttonSelected = 0 ' OK
-        url = m.top.dialog.text
-        m.global.feedurl = url
-        m.save_feed_url.control = "RUN"
-        m.top.dialog.close = true
-        m.get_channel_list.control = "RUN"
-    else if m.top.dialog.buttonSelected = 1 ' Set back to Demo
-        m.top.dialog.text = "https://tinyurl.com/yaoc6zpo"
-    else if m.top.dialog.buttonSelected = 2 ' Save
-        m.global.feedurl = m.top.dialog.text
-        m.save_feed_url.control = "RUN"
-        '    m.top.dialog.visible ="false"
-        '    m.top.unobserveField("buttonSelected")
-    end if
-end sub
